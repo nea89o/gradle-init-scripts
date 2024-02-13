@@ -27,7 +27,7 @@ allprojects {
     val toInstall = listOf("remapJar", "shadowJar", "jar").mapNotNull {
         tasks.findByName(it)
     }.filterIsInstance<org.gradle.jvm.tasks.Jar>().firstOrNull()
-    val targetDirectory = File(project.findProperty("minecraft.modfolder")!!)
+    val targetDirectory = File(project.findProperty("minecraft.modfolder") as String)
     if (toInstall != null) {
         tasks.create("installToMinecraft") {
             dependsOn(toInstall)
