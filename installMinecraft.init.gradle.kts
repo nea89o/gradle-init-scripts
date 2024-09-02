@@ -9,41 +9,43 @@
  * Will prefer a remapJar task, or otherwise use the shadowJar or jar tasks (for forge gradle).
  */
 
-
 allprojects {
     this.afterEvaluate {
         if (!listOf(
-            "gg.essential.loom",
-            "cc.polyfrost.loom",
-            "dev.architectury.loom",
-            "fabric-loom",
-            "net.minecraftforge.gradle.tweaker-client",
-            "net.minecraftforge.gradle.forge",
-            "xyz.wagyourtail.unimined"
-        ).any { plugins.hasPlugin(it) }
-    ) {
-        return@afterEvaluate
-    }
-    val toInstall = listOf("remapJar", "shadowJar", "jar").mapNotNull {
-        tasks.findByName(it)
-    }.filterIsInstance<org.gradle.jvm.tasks.Jar>().firstOrNull()
-    val targetDirectory = File(project.findProperty("minecraft.modfolder") as String)
-    if (toInstall != null) {
-        tasks.create("installToMinecraft") {
-            dependsOn(toInstall)
-            doLast {
-                val modJar = toInstall.archiveFile.get().asFile
-                targetDirectory.listFiles()
-                .filter {
-                    it.name.startsWith(toInstall.archiveBaseName.get())
+                "gg.essential.loom",
+                "cc.polyfrost.loom",
+                "dev.architectury.loom",
+                "fabric-loom",
+                "net.minecraftforge.gradle.tweaker-client",
+                "net.minecraftforge.gradle.forge",
+                "xyz.wagyourtail.unimined",
+            ).any { plugins.hasPlugin(it) }
+        ) {
+            return@afterEvaluate
+        }
+        val toInstall =
+            listOf("remapJar", "shadowJar", "jar")
+                .mapNotNull {
+                    tasks.findByName(it)
+                }.filterIsInstance<org.gradle.jvm.tasks.Jar>()
+                .firstOrNull()
+        val targetDirectory = File(project.findProperty("minecraft.modfolder") as? String ?: return@afterEvaluate)
+        if (toInstall != null) {
+            tasks.create("installToMinecraft") {
+                dependsOn(toInstall)
+                doLast {
+                    val modJar = toInstall.archiveFile.get().asFile
+                    targetDirectory
+                        .listFiles()
+                        .filter {
+                            it.name.startsWith(toInstall.archiveBaseName.get())
+                        }.forEach {
+                            it.delete()
+                        }
+                    modJar.copyTo(targetDirectory.resolve(modJar.name))
+                    println("Installed $modJar to $targetDirectory")
                 }
-                .forEach {
-                    it.delete()
-                }
-                modJar.copyTo(targetDirectory.resolve(modJar.name))
-                println("Installed $modJar to $targetDirectory")
             }
         }
     }
-}
 }
